@@ -1,62 +1,87 @@
-Now we have to install mod_authz_securepass. There isn't yet a 
-ready to use package avaiable, but compile it is really simple.
-We need apxs (APache eXtenSion tool) usually provided with the
-development package of Apache.
+There isn't yet a ready to use package available, but compiling this module is really simple.
+Follow the steps below:
 
-For Debian-like distro install it with
-
-apt-get install apache2-prefork-dev 
-# or
-apt-get install apache2-threaded-dev
-
-or with RedHat
-
-yum install -y httpd-devel make gcc
-
-Now download the source from git from the stable branch
-
-git clone https://github.com/AlessandroLorenzi/mod_authz_securepass.git -b master
-cd mod_authz_securepass
-
-The following code will compile and install the module
-
-make install_redhat
-
-or in debian distro:
-
-make install_debian
-a2enmod securepass
-
-Configuring mod_auth_securepass
-
-First we need to configure Apache to use cas. Follow the guide:
+1)
+Configure Apache to use cas. Follow the guide:
 http://support.secure-pass.net/wiki/index.php/Apache
 
-Is bossible to configure SecurePass module into .htaccess
+2)
+Install apxs (APache eXtenSion tool) usually provided with the development package of Apache.
 
-<Location />
-    Order allow,deny
-    allow from all
-    AuthzSecurepass On
-    AuthType CAS
-    AuthName "private area"
-    Require sprealm garl.ch partner.it
-<Location>
+For Debian-like distro install apxs with:
+	apt-get install apache2-prefork-dev 
+	# or
+	apt-get install apache2-threaded-dev
 
-In this example both user@garl.ch and otheruser@partner.it
-are allowed to access into site.
+For RedHat distro install apxs with
+	yum install -y httpd-devel make gcc
 
-Take care to activate module
+3)
+Download the source from git from the stable branch:
+	git clone https://github.com/gplll/mod_authz_securepass.git -b master
+	cd mod_authz_securepass
 
-    AuthzSecurepass On
+4)
+Compile the module and install it:
 
-and set allowed realms
+debian distro:
+	make install_debian
+	a2enmod securepass
 
-    Require sprealm garl.ch partner.it
+redhat distro:
+	make install_redhat
 
-Done!
-For further info Alessandro Lorenzi <alorenzi@garl.ch>
-http://alorenzi.netsons.org/alorenzi/doku.php?id=securepass_module_for_apache
+5)
+configure mod_auth_securepass using the following directives:
 
+Valid Server/VirtualHost Directives
+-----------------------------------
+Directive:      AuthzSecurepassDebug
+Default:        Off
+Description:    Set to On to enable debugging mode for troubleshooting.
 
+Directive:      AuthzSecurepassCheckGroup
+Default:        On
+Description:    Set to Off to disable checking of group associated to the user
 
+Directive:      AuthzSecurepassRESTfulAPI
+Default:        NULL
+Description:    URL of RESTful API where to check if a user belongs to a group
+
+Directive:      AuthzSecurepassAppID
+Default:        NULL
+Description:    Value of X-SecurePass-App-ID to be inserted into HTTP header to invoke Securepass RESTful API
+
+Directive:      AuthzSecurepassAppSecret
+Default:        NULL
+Description:    Value of X-SecurePass-App-Secret to be inserted into HTTP header to invoke Securepass RESTful API
+
+Directive:      AuthzSecurepassGroupCachePath
+Default:        NULL 
+Description:    The file system directory where mappings betweeen users and Securepass groups are cached
+
+Directive:      AuthzSecurepassGroupTimeout
+Default:        600 (10 minutes)
+Description:    The limit in seconds for the cached mappings between users and Securepass groups.
+                When a mapping has reached this age, the user is checked again against the Securepass RESTful API.
+                If set to 0, the mapping will not be cached
+
+Directive:      AuthzSecurepassCacheCleanInterval
+Default:        1800 (30 minutes)
+Description:    The minimum amount of time that must pass inbetween cache
+                cleanings.  When a new mapping is cached, the time of the last cache
+                clean is compared against this value. If  AuthzSecurepassCacheCleanInterval seconds 
+                have passed since the last cleaning, then all files in AuthzSecurepassGroupCachePath 
+                are examined and if they have expired, they are removed.  This is to prevent the
+                file system from becoming excessively cluttered.
+
+Valid Directory/.htaccess Directives
+-----------------------------------
+Directive:      AuthzSecurepass
+Default:        Off
+Description:    Set to On to enable SecurePass module
+
+Directive:      AuthzSecurepassAuthoritative
+Default:        On
+Description:    Set to Off to allow access control to be passed along to lower 
+                modules if this module can't confirm access rights 

@@ -3,8 +3,33 @@
 ##
 
 
+ifeq ($(APXS_PATH),)
+APXS_PATH=/usr/sbin/apxs
+endif
 
+# Note that gcc flags are passed through apxs, so preface with -Wc
+MY_LDFLAGS=-lcurl
+MY_CFLAGS=-Wc,-I. -Wc,-Wall
+SRCS=mod_authz_securepass.c jsmn.c
+HDRS=jsmn.h
+BUILDDIR := build
 
+.SUFFIXES: .c .o .la
+
+all:  build/.libs/mod_authz_securepass.so
+
+.PHONY: builddir
+builddir: build
+
+$(BUILDDIR):
+	@mkdir -p $@
+
+$(BUILDDIR)/.libs/mod_authz_securepass.so: $(SRCS) $(HDRS) | $(BUILDDIR)
+	@cd $(BUILDDIR) && for file in $(SRCS) $(HDRS) ; do ln -sf ../$$file . ; done
+	@cd $(BUILDDIR) && $(APXS_PATH) $(MY_LDFLAGS) $(MY_CFLAGS) -c $(subst src/,,$(SRCS))
+
+install: all
+	$(APXS_PATH) -i $(BUILDDIR)/mod_authz_securepass.la
 
 install_debian: mod_authz_securepass.c jsmn.c
 	apxs2 -c -l curl mod_authz_securepass.c jsmn.c
@@ -18,9 +43,6 @@ install_redhat: mod_authz_securepass.c
 	apxs -i -a mod_authz_securepass.la
 	#echo "LoadModule authz_securepass_module /etc/httpd/modules/mod_authz_securepass.so" > /etc/httpd/conf.d/mod_authz_securepass.conf
 
-	
 clean:
-	rm -rf .libs
-	rm -rf mod_authz_securepass.lo  mod_authz_securepass.la  mod_authz_securepass.slo mod_authz_securepass.o
-	rm -rf jsmn.lo  jsmn.la  jsmn.slo jsmn.o
+	-rm -rf $(BUILDDIR)
 

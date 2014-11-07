@@ -8,7 +8,6 @@ Version: 	0.1
 Release: 	1
 
 Source0: 	https://github.com/garlsecurity/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
-Source1:	mod_authz_securepass.conf
 URL: 		https://github.com/garlsecurity/mod_authz_securepass
 
 Group: 		System Environment/Daemons
@@ -38,7 +37,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/httpd/conf.d/
 
 install -m 755 build/.libs/mod_authz_securepass.so $RPM_BUILD_ROOT/%{_libdir}/httpd/modules/
 
-install %{SOURCE1} $RPM_BUILD_ROOT/etc/httpd/conf.d/
+install mod_authz_securepass.conf $RPM_BUILD_ROOT/etc/httpd/conf.d/
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT

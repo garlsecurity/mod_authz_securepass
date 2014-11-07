@@ -29,7 +29,7 @@ SecurePass provides identity management and web single sign-on through the CAS p
 %setup -qn %{name}-%{commit}
 
 %build
-make 
+make
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -42,15 +42,6 @@ install %{SOURCE1} $RPM_BUILD_ROOT/etc/httpd/conf.d/
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-
-
-%post
-%service -q httpd restart
-
-%postun
-if [ "$1" = "0" ]; then
-%service -q httpd restart
-fi
 
 
 %files

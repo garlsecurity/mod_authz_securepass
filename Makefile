@@ -3,8 +3,10 @@
 ##
 
 
-ifeq ($(APXS_PATH),)
-APXS_PATH=/usr/sbin/apxs
+ifneq ($(shell which apxs2),)
+APXS_PATH = apxs2
+else
+APXS_PATH = apxs
 endif
 
 # Note that gcc flags are passed through apxs, so preface with -Wc

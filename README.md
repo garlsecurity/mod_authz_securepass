@@ -1,7 +1,7 @@
 Apache authorization module for SecurePass
 ==========================================
 
-This is an Apache (2.2) module for authorizing SecurePass users.
+This is an Apache (2.2 and 2.4) module for authorizing SecurePass users.
 SecurePass provides web single sign-on through the CAS protocol.
 
 This module enhances the Apache authorization features by introducing two rules to restrict access 

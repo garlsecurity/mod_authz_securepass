@@ -9,9 +9,16 @@ else
 APXS_PATH = apxs
 endif
 
+APACHE_PATH = $(shell $(APXS_PATH) -q progname)
+ifneq ($(shell $(APACHE_PATH) -v | grep 2\.4\.),)
+APACHE_2_4=1
+else 
+APACHE_2_4=0
+endif
+
 # Note that gcc flags are passed through apxs, so preface with -Wc
 MY_LDFLAGS=-lcurl
-MY_CFLAGS=-Wc,-I. -Wc,-Wall
+MY_CFLAGS=-Wc,-I. -Wc,-Wall -DAPACHE_2_4=$(APACHE_2_4)
 SRCS=mod_authz_securepass.c jsmn.c
 HDRS=jsmn.h
 BUILDDIR := build

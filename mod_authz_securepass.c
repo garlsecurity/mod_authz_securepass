@@ -569,9 +569,9 @@ static void *create_authz_securepass_server_config (apr_pool_t *pool, server_rec
 
 static void *merge_authz_securepass_server_config (apr_pool_t *pool, void *BASE, void *ADD)
 {
-    sp_cfg *c = apr_pcalloc(pool, sizeof(sp_cfg));
-    sp_cfg *base = BASE;
-    sp_cfg *add = ADD;
+	sp_cfg *c = apr_pcalloc(pool, sizeof(sp_cfg));
+	sp_cfg *base = BASE;
+	sp_cfg *add = ADD;
 
 	c->check_group =(add->check_group != TRUE ? add->check_group : base->check_group);
 	c->debug =(add->debug != FALSE ? add->debug : base->debug);
@@ -761,6 +761,109 @@ static const command_rec authz_securepass_cmds[] =
 	{ NULL }
 };
 
+#if APACHE_2_4
+static const char *sp_parse_config(cmd_parms *cmd, const char *require_line,
+									 const void **parsed_require_line) {
+	const char *expr_err = NULL;
+	ap_expr_info_t *expr;
+
+	ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, cmd->server, 
+			"SecurePass: entering sp_parse_config(), require_line=%s", require_line);
+	expr = ap_expr_parse_cmd(cmd, require_line, AP_EXPR_FLAG_STRING_RESULT, &expr_err, NULL);
+	if (expr_err)
+		return (apr_pstrcat(cmd->temp_pool, "Cannot parse expression in require line: ", expr_err, NULL));
+	*parsed_require_line = expr;
+	return NULL;
+}
+
+static authz_status sprealm_check_authorization(request_rec *r,
+												 const char *require_args,
+												 const void *parsed_require_args) {
+
+	authz_securepass_dir_config_rec *dir= (authz_securepass_dir_config_rec *) 
+				ap_get_module_config(r->per_dir_config, &authz_securepass_module);
+	sp_cfg *c = (sp_cfg *) ap_get_module_config(r->server->module_config, &authz_securepass_module);
+
+	const char *err = NULL;
+	const ap_expr_info_t *expr = parsed_require_args;
+	const char *require;
+
+#if MYDEBUG
+	/* this is only used during module development to simulate CAS user */
+	if (dir->forced_user) {
+		r->user = apr_pcalloc(r->pool, 100);
+		strcpy (r->user, dir->forced_user);
+	}
+#endif
+
+	if (c->debug) {
+		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "SecurePass checking user %s, required_sprealms=%s", 
+				r->user, require_args);
+		dump_config (r, dir, c);
+	}
+	if (!r->user) {
+		return AUTHZ_DENIED_NO_USER;
+	}
+	require = ap_expr_str_exec(r, expr, &err);
+	if (err) {
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, "SecurePass: Can't evaluate expression: %s", err);
+		return AUTHZ_DENIED;
+	}
+	if (c->debug) {
+		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "SecurePass: require=%s", require);
+	}
+	if (check_securepass_realm (r, require)) {
+		/* a Realm has been found */
+		return AUTHZ_GRANTED;
+	} else {
+		return AUTHZ_DENIED;
+	}
+}
+
+static authz_status spgroup_check_authorization(request_rec *r,
+												 const char *require_args,
+												 const void *parsed_require_args) {
+
+	authz_securepass_dir_config_rec *dir= (authz_securepass_dir_config_rec *) 
+				ap_get_module_config(r->per_dir_config, &authz_securepass_module);
+	sp_cfg *c = (sp_cfg *) ap_get_module_config(r->server->module_config, &authz_securepass_module);
+
+	const char *err = NULL;
+	const ap_expr_info_t *expr = parsed_require_args;
+	const char *require;
+
+#if MYDEBUG
+	/* this is only used during module development to simulate CAS user */
+	if (dir->forced_user) {
+		r->user = apr_pcalloc(r->pool, 100);
+		strcpy (r->user, dir->forced_user);
+	}
+#endif
+
+	if (c->debug) {
+		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "SecurePass checking user %s, required_spgroups=%s", 
+				r->user, require_args);
+	}
+	if (!r->user) {
+		return AUTHZ_DENIED_NO_USER;
+	}
+	require = ap_expr_str_exec(r, expr, &err);
+	if (err) {
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, "SecurePass: Can't evaluate expression: %s", err);
+		return AUTHZ_DENIED;
+	}
+	if (c->debug) {
+		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "SecurePass: require=%s", require);
+	}
+	if (check_sp_group (r, require)) {
+		return AUTHZ_GRANTED;
+	} else {
+		return AUTHZ_DENIED;
+	}
+
+}
+
+#else /* APACHE_2_4 */
 
 static int authz_securepass_check_user_access(request_rec *r) 
 {
@@ -846,6 +949,7 @@ static int authz_securepass_check_user_access(request_rec *r)
 	ap_note_basic_auth_failure(r);
 	return HTTP_UNAUTHORIZED;
 }
+#endif
 
 static int authz_sp_post_config(apr_pool_t *pool, apr_pool_t *p1, apr_pool_t *p2, server_rec *s)
 {
@@ -884,11 +988,37 @@ static int authz_sp_post_config(apr_pool_t *pool, apr_pool_t *p1, apr_pool_t *p2
 	return status;
 }
 
+#if APACHE_2_4
+static const authz_provider authz_sprealm_provider =
+{
+	&sprealm_check_authorization,
+	&sp_parse_config,
+};
+
+static const authz_provider authz_spgroup_provider =
+{
+	&spgroup_check_authorization,
+	&sp_parse_config,
+};
+#endif
+
 static void authz_securepass_register_hooks(apr_pool_t *p)
 {
 	ap_hook_post_config(authz_sp_post_config, NULL, NULL, APR_HOOK_LAST);
+#if APACHE_2_4
+	/* Register authz providers */
+	ap_register_auth_provider(p, AUTHZ_PROVIDER_GROUP, "sprealm",
+							AUTHZ_PROVIDER_VERSION,
+							&authz_sprealm_provider,
+							AP_AUTH_INTERNAL_PER_CONF);
+	ap_register_auth_provider(p, AUTHZ_PROVIDER_GROUP, "spgroup",
+							AUTHZ_PROVIDER_VERSION,
+							&authz_spgroup_provider,
+							AP_AUTH_INTERNAL_PER_CONF);
+#else
 	ap_hook_auth_checker(authz_securepass_check_user_access, NULL, NULL,
 		APR_HOOK_MIDDLE);
+#endif
 }
 
 module AP_MODULE_DECLARE_DATA authz_securepass_module = {

@@ -18,21 +18,16 @@ For RedHat distro install apxs with
 
 3)
 Download the source from git from the stable branch:
-	git clone https://github.com/gplll/mod_authz_securepass.git -b master
+	git clone https://github.com/garlsecurity/mod_authz_securepass.git -b master
 	cd mod_authz_securepass
 
 4)
 Compile the module and install it:
 
-debian distro:
-	make install_debian
-	a2enmod securepass
-
-redhat distro:
-	make install_redhat
+make install
 
 5)
-configure mod_auth_securepass using the following directives:
+configure mod_authz_securepass using the following directives:
 
 Valid Server/VirtualHost Directives
 -----------------------------------

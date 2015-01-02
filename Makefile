@@ -11,7 +11,7 @@ endif
 
 # Note that gcc flags are passed through apxs, so preface with -Wc
 MY_LDFLAGS=-lcurl
-MY_CFLAGS=-Wc,-I. -Wc,-Wall -DAPACHE_2_4=$(APACHE_2_4)
+MY_CFLAGS=-Wc,-I. -Wc,-Wall
 SRCS=mod_authz_securepass.c jsmn.c
 HDRS=jsmn.h
 BUILDDIR := build

@@ -30,4 +30,4 @@ bitbucket.org/zserge/jsmn under the MIT license.
 
 Author
 ===========================================
-gplll1818@gmail.com, Jun 2014
+gplll1818@gmail.com, Jun 2014 - Jan 2015

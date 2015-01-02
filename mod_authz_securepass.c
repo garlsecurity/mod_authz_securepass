@@ -761,7 +761,7 @@ static const command_rec authz_securepass_cmds[] =
 	{ NULL }
 };
 
-#if APACHE_2_4
+#if (AP_SERVER_MINORVERSION_NUMBER == 4)
 static const char *sp_parse_config(cmd_parms *cmd, const char *require_line,
 									 const void **parsed_require_line) {
 	const char *expr_err = NULL;
@@ -863,7 +863,7 @@ static authz_status spgroup_check_authorization(request_rec *r,
 
 }
 
-#else /* APACHE_2_4 */
+#else // (AP_SERVER_MINORVERSION_NUMBER == 4)
 
 static int authz_securepass_check_user_access(request_rec *r) 
 {
@@ -988,7 +988,7 @@ static int authz_sp_post_config(apr_pool_t *pool, apr_pool_t *p1, apr_pool_t *p2
 	return status;
 }
 
-#if APACHE_2_4
+#if (AP_SERVER_MINORVERSION_NUMBER == 4)
 static const authz_provider authz_sprealm_provider =
 {
 	&sprealm_check_authorization,
@@ -1005,7 +1005,7 @@ static const authz_provider authz_spgroup_provider =
 static void authz_securepass_register_hooks(apr_pool_t *p)
 {
 	ap_hook_post_config(authz_sp_post_config, NULL, NULL, APR_HOOK_LAST);
-#if APACHE_2_4
+#if (AP_SERVER_MINORVERSION_NUMBER == 4)
 	/* Register authz providers */
 	ap_register_auth_provider(p, AUTHZ_PROVIDER_GROUP, "sprealm",
 							AUTHZ_PROVIDER_VERSION,

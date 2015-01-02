@@ -3,17 +3,10 @@
 ##
 
 
-ifneq ($(shell which apxs2),)
+ifneq ($(shell which apxs2 2>/dev/null),)
 APXS_PATH = apxs2
 else
 APXS_PATH = apxs
-endif
-
-APACHE_PATH = $(shell $(APXS_PATH) -q progname)
-ifneq ($(shell $(APACHE_PATH) -v | grep 2\.4\.),)
-APACHE_2_4=1
-else 
-APACHE_2_4=0
 endif
 
 # Note that gcc flags are passed through apxs, so preface with -Wc

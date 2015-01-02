@@ -27,6 +27,11 @@ Compile the module and install it:
 make install
 
 5)
+In your Apache configuration, place the following line to load this module:
+
+LoadModule authz_securepass_module /path/to/mod_authz_securepass.so
+
+6)
 configure mod_authz_securepass using the following directives:
 
 Valid Server/VirtualHost Directives

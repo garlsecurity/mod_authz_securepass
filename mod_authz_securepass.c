@@ -26,8 +26,6 @@
 #include "curl/curl.h"
 #include "jsmn.h"
 
-#define AUTHZ_GRANTED 1
-#define AUTHZ_DENIED 0
 #define DEFAULT_GROUP_TMO 600
 #define DEFAULT_CACHE_CLEAN_ITV 1800
 #define ERR_LINE_LEN 80

@@ -786,19 +786,26 @@ static authz_status sprealm_check_authorization(request_rec *r,
 	const ap_expr_info_t *expr = parsed_require_args;
 	const char *require;
 
-#if MYDEBUG
-	/* this is only used during module development to simulate CAS user */
-	if (dir->forced_user) {
-		r->user = apr_pcalloc(r->pool, 100);
-		strcpy (r->user, dir->forced_user);
-	}
-#endif
 
 	if (c->debug) {
 		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "SecurePass checking user %s, required_sprealms=%s", 
 				r->user, require_args);
 		dump_config (r, dir, c);
 	}
+#if MYDEBUG
+	/* this is only used during module development to simulate CAS user */
+	if (dir->forced_user) {
+		if (!r->user) {
+			/* CAS has not been invoked yet */
+			return AUTHZ_DENIED_NO_USER;
+		}
+		else {
+			/* CAS has been invoked - substitute the user with MY user */
+			r->user = apr_pcalloc(r->pool, 100);
+			strcpy (r->user, dir->forced_user);
+		}
+	}
+#endif
 	if (!r->user) {
 		return AUTHZ_DENIED_NO_USER;
 	}
@@ -830,18 +837,24 @@ static authz_status spgroup_check_authorization(request_rec *r,
 	const ap_expr_info_t *expr = parsed_require_args;
 	const char *require;
 
-#if MYDEBUG
-	/* this is only used during module development to simulate CAS user */
-	if (dir->forced_user) {
-		r->user = apr_pcalloc(r->pool, 100);
-		strcpy (r->user, dir->forced_user);
-	}
-#endif
-
 	if (c->debug) {
 		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "SecurePass checking user %s, required_spgroups=%s", 
 				r->user, require_args);
 	}
+#if MYDEBUG
+	/* this is only used during module development to simulate CAS user */
+	if (dir->forced_user) {
+		if (!r->user) {
+			/* CAS has not been invoked yet */
+			return AUTHZ_DENIED_NO_USER;
+		}
+		else {
+			/* CAS has been invoked - substitute the user with MY user */
+			r->user = apr_pcalloc(r->pool, 100);
+			strcpy (r->user, dir->forced_user);
+		}
+	}
+#endif
 	if (!r->user) {
 		return AUTHZ_DENIED_NO_USER;
 	}
